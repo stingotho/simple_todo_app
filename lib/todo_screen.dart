@@ -54,77 +54,140 @@ class _TodoScreenState extends State<TodoScreen> {
     await _todoService.saveTodos(_todos);
   }
 
+  Future<void> _deleteCompletedTodos() async {
+    setState(() {
+      _todos.removeWhere((todo) => todo.isCompleted);
+    });
+    await _todoService.saveTodos(_todos);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Minimal Todo', style: TextStyle(fontWeight: FontWeight.bold)),
-        centerTitle: true,
-        elevation: 0,
-        backgroundColor: Colors.transparent,
-        foregroundColor: Colors.black,
+        title: const Text(
+          'Tasks',
+          style: TextStyle(fontWeight: FontWeight.w600, color: Colors.black87),
+        ),
+        actions: [
+          if (_todos.any((t) => t.isCompleted))
+            IconButton(
+              icon: const Icon(Icons.delete_sweep_rounded, color: Colors.redAccent),
+              tooltip: 'Delete Completed',
+              onPressed: _deleteCompletedTodos,
+            ),
+        ],
       ),
       body: Column(
         children: [
           Expanded(
-            child: ListView.builder(
-              itemCount: _todos.length,
-              itemBuilder: (context, index) {
-                final todo = _todos[index];
-                return Dismissible(
-                  key: Key(todo.id),
-                  background: Container(
-                    color: Colors.red,
-                    alignment: Alignment.centerRight,
-                    padding: const EdgeInsets.only(right: 20),
-                    child: const Icon(Icons.delete, color: Colors.white),
-                  ),
-                  onDismissed: (direction) {
-                    _deleteTodo(todo);
-                  },
-                  child: ListTile(
-                    leading: Checkbox(
-                      value: todo.isCompleted,
-                      onChanged: (_) => _toggleTodo(todo),
-                      activeColor: Colors.black,
+            child: _todos.isEmpty
+                ? Center(
+                    child: Text(
+                      'No tasks yet.\nAdd one below!',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: Colors.grey[400], fontSize: 16),
                     ),
-                    title: Text(
-                      todo.title,
-                      style: TextStyle(
-                        decoration: todo.isCompleted ? TextDecoration.lineThrough : null,
-                        color: todo.isCompleted ? Colors.grey : Colors.black,
-                      ),
-                    ),
+                  )
+                : ListView.builder(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                    itemCount: _todos.length,
+                    itemBuilder: (context, index) {
+                      final todo = _todos[index];
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 12),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.03),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Dismissible(
+                          key: Key(todo.id),
+                          direction: DismissDirection.endToStart,
+                          background: Container(
+                            alignment: Alignment.centerRight,
+                            padding: const EdgeInsets.only(right: 20),
+                            decoration: BoxDecoration(
+                              color: Colors.redAccent.withOpacity(0.9),
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: const Icon(Icons.delete_outline, color: Colors.white),
+                          ),
+                          onDismissed: (direction) {
+                            _deleteTodo(todo);
+                          },
+                          child: ListTile(
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                            leading: Transform.scale(
+                              scale: 1.2,
+                              child: Checkbox(
+                                value: todo.isCompleted,
+                                onChanged: (_) => _toggleTodo(todo),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                activeColor: Theme.of(context).primaryColor,
+                              ),
+                            ),
+                            title: Text(
+                              todo.title,
+                              style: TextStyle(
+                                fontSize: 16,
+                                decoration: todo.isCompleted ? TextDecoration.lineThrough : null,
+                                color: todo.isCompleted ? Colors.grey[400] : Colors.black87,
+                                fontWeight: todo.isCompleted ? FontWeight.normal : FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    },
                   ),
-                );
-              },
-            ),
           ),
-          Padding(
-            padding: const EdgeInsets.all(20.0),
+          Container(
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 40),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 20,
+                  offset: const Offset(0, -5),
+                ),
+              ],
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
+            ),
             child: Row(
               children: [
                 Expanded(
                   child: TextField(
                     controller: _controller,
                     decoration: InputDecoration(
-                      hintText: 'Add a new task',
+                      hintText: 'What needs to be done?',
+                      hintStyle: TextStyle(color: Colors.grey[400]),
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(15),
+                        borderRadius: BorderRadius.circular(20),
                         borderSide: BorderSide.none,
                       ),
                       filled: true,
-                      fillColor: Colors.grey[200],
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+                      fillColor: Colors.grey[100],
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
                     ),
                     onSubmitted: (_) => _addTodo(),
                   ),
                 ),
-                const SizedBox(width: 10),
+                const SizedBox(width: 16),
                 FloatingActionButton(
                   onPressed: _addTodo,
-                  backgroundColor: Colors.black,
-                  child: const Icon(Icons.add, color: Colors.white),
+                  elevation: 2,
+                  backgroundColor: Theme.of(context).primaryColor,
+                  child: const Icon(Icons.add_rounded, color: Colors.white, size: 32),
                 ),
               ],
             ),
